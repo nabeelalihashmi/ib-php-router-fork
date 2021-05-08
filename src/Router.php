@@ -10,9 +10,6 @@
 
 namespace Buki\Router;
 
-use Buki\Router\RouterCommand;
-use Buki\Router\RouterException;
-use Buki\Router\RouterRequest;
 use Closure;
 use Exception;
 use ReflectionMethod;
@@ -43,7 +40,7 @@ class Router
     /**
      * Router Version
      */
-    const VERSION = '2.2.1';
+    const VERSION = '2.3.0';
 
     /**
      * @var string $baseFolder Pattern definitions for parameters of Route
@@ -64,11 +61,14 @@ class Router
      * @var array $patterns Pattern definitions for parameters of Route
      */
     protected $patterns = [
-        ':id' => '(\d+)',
-        ':number' => '(\d+)',
-        ':any' => '([^/]+)',
         ':all' => '(.*)',
-        ':string' => '(\w+)',
+        ':any' => '([^/]+)',
+        ':id' => '(\d+)',
+        ':int' => '(\d+)',
+        ':number' => '([+-]?([0-9]*[.])?[0-9]+)',
+        ':float' => '([+-]?([0-9]*[.])?[0-9]+)',
+        ':bool' => '(true|false|1|0)',
+        ':string' => '([\w\-_]+)',
         ':slug' => '([\w\-_]+)',
         ':uuid' => '([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})',
         ':date' => '([0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]))',
@@ -390,14 +390,13 @@ class Router
                         }
                     }
 
-                    $methodVar = lcfirst(preg_replace('/' . $method . '/i', '', $methodName, 1));
+                    $methodVar = lcfirst(
+                        preg_replace('/' . $method . '_?/i', '', $methodName, 1)
+                    );
                     $methodVar = strtolower(preg_replace('%([a-z]|[0-9])([A-Z])%', '\1-\2', $methodVar));
 
-                    if (!empty($only) && !in_array($methodVar, $only)) {
-                        continue;
-                    }
-
-                    if (!empty($except) && in_array($methodVar, $except)) {
+                    if ((!empty($only) && !in_array($methodVar, $only))
+                        || (!empty($except) && in_array($methodVar, $except))) {
                         continue;
                     }
 
@@ -405,15 +404,10 @@ class Router
                     $endpoints = [];
                     foreach ($ref->getParameters() as $param) {
                         $typeHint = $param->hasType() ? $param->getType()->getName() : null;
-                        if (in_array($typeHint, ['int'])) {
-                            $pattern = ':id';
-                        } elseif (in_array($typeHint, ['string', 'float', 'bool'])) {
-                            $pattern = ':slug';
-                        } elseif ($typeHint === null) {
-                            $pattern = ':any';
-                        } else {
+                        if (!in_array($typeHint, ['int', 'float', 'string', 'bool']) && $typeHint !== null) {
                             continue;
                         }
+                        $pattern = $this->patterns[":{$typeHint}"] ? ":{$typeHint}" : ":any";
                         $endpoints[] = $param->isOptional() ? "{$pattern}?" : $pattern;
                     }
 
@@ -785,7 +779,7 @@ class Router
         $dirname = dirname($script);
         $dirname = $dirname === '/' ? '' : $dirname;
         $basename = basename($script);
-        $uri = str_replace([$dirname, $basename],null, $this->request()->server->get('REQUEST_URI'));
+        $uri = str_replace([$dirname, $basename], null, $this->request()->server->get('REQUEST_URI'));
         return $this->clearRouteName(explode('?', $uri)[0]);
     }
 }
