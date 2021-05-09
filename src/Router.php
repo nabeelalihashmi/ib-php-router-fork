@@ -407,7 +407,7 @@ class Router
                         if (!in_array($typeHint, ['int', 'float', 'string', 'bool']) && $typeHint !== null) {
                             continue;
                         }
-                        $pattern = $this->patterns[":{$typeHint}"] ? ":{$typeHint}" : ":any";
+                        $pattern = isset($this->patterns[":{$typeHint}"]) ? ":{$typeHint}" : ":any";
                         $endpoints[] = $param->isOptional() ? "{$pattern}?" : $pattern;
                     }
 
