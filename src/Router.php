@@ -298,11 +298,20 @@ class Router
                 $route = str_replace($searches, $replaces, $route);
                 if (preg_match('#^' . $route . '$#', $uri, $matched)) {
                     $foundRoute = true;
+
                     $this->runRouteMiddleware($data, 'before');
+
                     array_shift($matched);
                     $matched = array_map(function ($value) {
                         return trim(urldecode($value));
                     }, $matched);
+
+                    foreach ($data['groups'] as $group) {
+                        if (strstr($group, ':') !== false) {
+                            array_shift($matched);
+                        }
+                    }
+
                     $this->runRouteCommand($data['callback'], $matched);
                     $this->runRouteMiddleware($data, 'after');
                     break;
@@ -692,11 +701,13 @@ class Router
     protected function addRoute(string $uri, string $method, $callback, $options = [])
     {
         $groupUri = '';
+        $groupStack = [];
         $beforeMiddlewares = [];
         $afterMiddlewares = [];
         if (!empty($this->groups)) {
             foreach ($this->groups as $key => $value) {
                 $groupUri .= $value['route'];
+                $groupStack[] = trim($value['route'], '/');
                 $beforeMiddlewares = array_merge($beforeMiddlewares, $value['before']);
                 $afterMiddlewares = array_merge($afterMiddlewares, $value['after']);
             }
@@ -718,6 +729,7 @@ class Router
             'name' => $options['name'] ?? $routeName,
             'before' => $beforeMiddlewares,
             'after' => $afterMiddlewares,
+            'groups' => $groupStack,
         ];
         array_unshift($this->routes, $data);
     }
