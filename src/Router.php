@@ -98,7 +98,7 @@ class Router
     /**
      * @var string $cacheFile Cache file
      */
-    protected $cacheFile = null;
+    protected $cacheFile = '';
 
     /**
      * @var bool $cacheLoaded Cache is loaded?
@@ -791,7 +791,7 @@ class Router
         $dirname = dirname($script);
         $dirname = $dirname === '/' ? '' : $dirname;
         $basename = basename($script);
-        $uri = str_replace([$dirname, $basename], null, $this->request()->server->get('REQUEST_URI'));
+        $uri = str_replace([$dirname, $basename], '', $this->request()->server->get('REQUEST_URI'));
         return $this->clearRouteName(explode('?', $uri)[0]);
     }
 }
