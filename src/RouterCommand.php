@@ -92,7 +92,7 @@ class RouterCommand
     public function getMiddlewareInfo(): array
     {
         return [
-            'path' => "{$this->baseFolder}/{$this->paths['middlewares']}",
+            'path' => "{$this->paths['middlewares']}",
             'namespace' => $this->namespaces['middlewares'],
         ];
     }
@@ -103,7 +103,7 @@ class RouterCommand
     public function getControllerInfo(): array
     {
         return [
-            'path' => "{$this->baseFolder}/{$this->paths['controllers']}",
+            'path' => "{$this->paths['controllers']}",
             'namespace' => $this->namespaces['controllers'],
         ];
     }
@@ -125,7 +125,8 @@ class RouterCommand
         Request $request,
         Response $response,
         array $middlewares
-    ) {
+    ): ?RouterCommand
+    {
         if (null === self::$instance) {
             self::$instance = new static(
                 $baseFolder, $paths, $namespaces,
@@ -313,10 +314,10 @@ class RouterCommand
         $middlewareMethod = 'handle'; // For now, it's constant.
         $controller = $this->resolveClass($middleware, $info['path'], $info['namespace']);
 
-        if (in_array($className = get_class($controller), $this->markedMiddlewares)) {
+        if (in_array($command, $this->markedMiddlewares)) {
             return true;
         }
-        array_push($this->markedMiddlewares, $className);
+        array_push($this->markedMiddlewares, $command);
 
         if (!method_exists($controller, $middlewareMethod)) {
             return $this->exception("{$middlewareMethod}() method is not found in {$middleware} class.");
@@ -359,7 +360,7 @@ class RouterCommand
      */
     protected function sendResponse($response)
     {
-        if (is_array($response)) {
+        if (is_array($response) || strpos($this->request->headers->get('Accept'), 'application/json') !== false) {
             $this->response->headers->set('Content-Type', 'application/json');
             return $this->response
                 ->setContent(json_encode($response))
@@ -377,12 +378,12 @@ class RouterCommand
      * Throw new Exception for Router Error
      *
      * @param string $message
-     * @param int    $statusCode
+     * @param int $statusCode
      *
      * @return RouterException
      * @throws Exception
      */
-    protected function exception($message = '', $statusCode = 500)
+    protected function exception(string $message = '', int $statusCode = 500)
     {
         return new RouterException($message, $statusCode);
     }

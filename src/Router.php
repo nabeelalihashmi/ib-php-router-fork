@@ -40,7 +40,7 @@ class Router
     /**
      * Router Version
      */
-    const VERSION = '2.3.0';
+    const VERSION = '2.3.4';
 
     /**
      * @var string $baseFolder Pattern definitions for parameters of Route
@@ -133,8 +133,8 @@ class Router
     /**
      * Router constructor method.
      *
-     * @param array         $params
-     * @param Request|null  $request
+     * @param array $params
+     * @param Request|null $request
      * @param Response|null $response
      */
     public function __construct(array $params = [], Request $request = null, Response $response = null)
@@ -211,10 +211,10 @@ class Router
     /**
      * Add new route method one or more http methods.
      *
-     * @param string         $methods
-     * @param string         $route
+     * @param string $methods
+     * @param string $route
      * @param string|closure $callback
-     * @param array          $options
+     * @param array $options
      *
      * @return bool
      */
@@ -241,12 +241,12 @@ class Router
      * Add new route rules pattern; String or Array
      *
      * @param string|array $pattern
-     * @param null|string  $attr
+     * @param string|null $attr
      *
      * @return mixed
      * @throws
      */
-    public function pattern($pattern, $attr = null)
+    public function pattern($pattern, string $attr = null)
     {
         if (is_array($pattern)) {
             foreach ($pattern as $key => $value) {
@@ -340,9 +340,9 @@ class Router
     /**
      * Routes Group
      *
-     * @param string  $prefix
-     * @param closure $callback
-     * @param array   $options
+     * @param string $prefix
+     * @param Closure $callback
+     * @param array $options
      *
      * @return bool
      */
@@ -359,9 +359,7 @@ class Router
 
         array_push($this->groups, $group);
 
-        if (is_object($callback)) {
-            call_user_func_array($callback, [$this]);
-        }
+        call_user_func_array($callback, [$this]);
 
         $this->endGroup();
 
@@ -373,7 +371,7 @@ class Router
      *
      * @param string $route
      * @param string $controller
-     * @param array  $options
+     * @param array $options
      *
      * @return mixed
      * @throws
@@ -543,7 +541,7 @@ class Router
     /**
      * Detect Routes Middleware; before or after
      *
-     * @param array  $middleware
+     * @param array $middleware
      * @param string $type
      *
      * @return void
@@ -573,12 +571,12 @@ class Router
      * Throw new Exception for Router Error
      *
      * @param string $message
-     * @param int    $statusCode
+     * @param int $statusCode
      *
      * @return RouterException
      * @throws Exception
      */
-    protected function exception($message = '', int $statusCode = 500): RouterException
+    protected function exception(string $message = '', int $statusCode = 500): RouterException
     {
         return new RouterException($message, $statusCode);
     }
@@ -612,21 +610,21 @@ class Router
 
         if (isset($params['paths']) && $paths = $params['paths']) {
             $this->paths['controllers'] = isset($paths['controllers'])
-                ? trim($paths['controllers'], '/')
+                ? rtrim($paths['controllers'], '/')
                 : $this->paths['controllers'];
 
             $this->paths['middlewares'] = isset($paths['middlewares'])
-                ? trim($paths['middlewares'], '/')
+                ? rtrim($paths['middlewares'], '/')
                 : $this->paths['middlewares'];
         }
 
         if (isset($params['namespaces']) && $namespaces = $params['namespaces']) {
             $this->namespaces['controllers'] = isset($namespaces['controllers'])
-                ? trim($namespaces['controllers'], '\\') . '\\'
+                ? rtrim($namespaces['controllers'], '\\') . '\\'
                 : '';
 
             $this->namespaces['middlewares'] = isset($namespaces['middlewares'])
-                ? trim($namespaces['middlewares'], '\\') . '\\'
+                ? rtrim($namespaces['middlewares'], '\\') . '\\'
                 : '';
         }
 
@@ -638,7 +636,7 @@ class Router
             $this->mainMethod = $params['main_method'];
         }
 
-        $this->cacheFile = isset($params['cache']) ? $params['cache'] : realpath(__DIR__ . '/../cache.php');
+        $this->cacheFile = $params['cache'] ?? realpath(__DIR__ . '/../cache.php');
     }
 
     /**
@@ -694,11 +692,11 @@ class Router
      * @param string $uri
      * @param string $method
      * @param        $callback
-     * @param array  $options
+     * @param array|null $options
      *
      * @return void
      */
-    protected function addRoute(string $uri, string $method, $callback, $options = [])
+    protected function addRoute(string $uri, string $method, $callback, ?array $options = null)
     {
         $groupUri = '';
         $groupStack = [];
@@ -752,11 +750,11 @@ class Router
      * Run Route Command; Controller or Closure
      *
      * @param $command
-     * @param $params
+     * @param array $params
      *
      * @return void
      */
-    protected function runRouteCommand($command, $params = [])
+    protected function runRouteCommand($command, array $params = [])
     {
         $this->routerCommand()->runRoute($command, $params);
     }
@@ -787,7 +785,7 @@ class Router
      */
     protected function getRequestUri(): string
     {
-        $script = $this->request()->server->get('SCRIPT_NAME');
+        $script = $this->request()->server->get('SCRIPT_FILENAME') ?? $this->request()->server->get('SCRIPT_NAME');
         $dirname = dirname($script);
         $dirname = $dirname === '/' ? '' : $dirname;
         $basename = basename($script);
