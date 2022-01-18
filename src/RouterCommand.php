@@ -363,7 +363,7 @@ class RouterCommand
         if (is_array($response) || strpos($this->request->headers->get('Accept'), 'application/json') !== false) {
             $this->response->headers->set('Content-Type', 'application/json');
             return $this->response
-                ->setContent(json_encode($response))
+                ->setContent($response instanceof Response ? $response->getContent() : json_encode($response))
                 ->send();
         }
 
