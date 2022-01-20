@@ -358,7 +358,7 @@ class RouterCommand
      *
      * @return Response|mixed
      */
-    protected function sendResponse($response)
+    public function sendResponse($response)
     {
         if (is_array($response) || strpos($this->request->headers->get('Accept'), 'application/json') !== false) {
             $this->response->headers->set('Content-Type', 'application/json');

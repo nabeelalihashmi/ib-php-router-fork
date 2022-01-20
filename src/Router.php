@@ -40,7 +40,7 @@ class Router
     /**
      * Router Version
      */
-    const VERSION = '2.3.4';
+    const VERSION = '2.4.0';
 
     /**
      * @var string $baseFolder Pattern definitions for parameters of Route
@@ -326,14 +326,15 @@ class Router
 
         if ($foundRoute === false) {
             if (!$this->errorCallback) {
-                $this->errorCallback = function () {
-                    $this->response()
-                        ->setStatusCode(Response::HTTP_NOT_FOUND)
-                        ->sendHeaders();
-                    return $this->exception('Looks like page not found or something went wrong. Please try again.');
+                $this->errorCallback = function (Request $request, Response $response) {
+                    $response->setStatusCode(Response::HTTP_NOT_FOUND);
+                    $response->setContent('Looks like page not found or something went wrong. Please try again.');
+                    return $response;
                 };
             }
-            call_user_func($this->errorCallback);
+            $this->routerCommand()->sendResponse(
+                call_user_func($this->errorCallback, $this->request(), $this->response())
+            );
         }
     }
 
@@ -790,6 +791,7 @@ class Router
         $dirname = $dirname === '/' ? '' : $dirname;
         $basename = basename($script);
         $uri = str_replace([$dirname, $basename], '', $this->request()->server->get('REQUEST_URI'));
+        $uri = preg_replace('/\/'.str_replace(['.'],['\.'], $this->baseFolder).'/', '', $uri, 1);
         return $this->clearRouteName(explode('?', $uri)[0]);
     }
 }
