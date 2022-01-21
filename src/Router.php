@@ -40,7 +40,7 @@ class Router
     /**
      * Router Version
      */
-    const VERSION = '2.4.0';
+    const VERSION = '2.4.1';
 
     /**
      * @var string $baseFolder Pattern definitions for parameters of Route
@@ -790,8 +790,10 @@ class Router
         $dirname = dirname($script);
         $dirname = $dirname === '/' ? '' : $dirname;
         $basename = basename($script);
+
         $uri = str_replace([$dirname, $basename], '', $this->request()->server->get('REQUEST_URI'));
-        $uri = preg_replace('/\/'.str_replace(['.'],['\.'], $this->baseFolder).'/', '', $uri, 1);
+        $uri = preg_replace('/'.str_replace(['\\', '/', '.',], ['/', '\/', '\.'], $this->baseFolder).'/', '', $uri, 1);
+
         return $this->clearRouteName(explode('?', $uri)[0]);
     }
 }

@@ -2,20 +2,20 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use Buki\Router;
-
 $params = [
     'paths' => [
-        'controllers' => 'controllers/',
+        'Controllers' => 'Controllers',
+        'middlewares' => 'Middlewares',
     ],
     'namespaces' => [
-        'controllers' => 'Controllers\\',
+        'Controllers' => 'Controllers\\',
+        'middlewares' => 'Middlewares\\',
     ],
     'base_folder' => __DIR__,
     'main_method' => 'main',
 ];
 
-$router = new Router($params);
+$router = new \Buki\Router\Router($params);
 
 $router->get('/', function() {
     return 'Hello World!';

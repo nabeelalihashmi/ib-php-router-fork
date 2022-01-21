@@ -13,7 +13,6 @@
     Action php-fcgi /php-fcgi
     Alias /php-fcgi /usr/lib/cgi-bin/php-fcgi
     FastCgiExternalServer /usr/lib/cgi-bin/php-fcgi -host 127.0.0.1:9000 -pass-header Authorization
-
     <Directory /usr/lib/cgi-bin>
       Require all granted
     </Directory>
