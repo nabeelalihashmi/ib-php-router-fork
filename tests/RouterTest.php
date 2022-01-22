@@ -2,93 +2,52 @@
 
 namespace Buki\Tests;
 
-use Buki\Router;
-use GuzzleHttp\Client;
+use Buki\Router\Router;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
 
 class RouterTest extends TestCase
 {
     protected $router;
 
-    protected $client;
+    protected $request;
 
-    protected function setUp()
+    protected function setUp(): void
     {
-        $this->router = new Router();
-
-        $this->client = new Client();
+        error_reporting(E_ALL);
+        $this->request = Request::createFromGlobals();
+        $this->router = new Router(
+            [],
+            $this->request
+        );
 
         // Clear SCRIPT_NAME because bramus/router tries to guess the subfolder the script is run in
-        $_SERVER['SCRIPT_NAME'] = '/index.php';
+        $this->request->server->set('SCRIPT_NAME', '/index.php');
+        $this->request->server->set('SCRIPT_FILENAME', '/index.php');
 
         // Default request method to GET
-        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->request->server->set('REQUEST_METHOD', 'GET');
 
         // Default SERVER_PROTOCOL method to HTTP/1.1
-        $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
+        $this->request->server->set('SERVER_PROTOCOL', 'HTTP/1.1');
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         // nothing
     }
 
-    public function testGetIndexRoute()
-    {
-        $request = $this->client->createRequest('GET', 'http://localhost/tests/fixtures/');
-        $response = $this->client->send($request);
-
-        $this->assertSame('Hello World!', (string) $response->getBody());
-    }
-
-    /**
-     * @expectedException GuzzleHttp\Exception\ClientException
-     */
-    public function testGetNotFoundRoute()
-    {
-        $request = $this->client->createRequest('GET', 'http://localhost/tests/fixtures/not/found');
-        $response = $this->client->send($request);
-    }
-
-    public function testGetControllerRoute()
-    {
-        $request = $this->client->createRequest('GET', 'http://localhost/tests/fixtures/controller');
-        $response = $this->client->send($request);
-
-        $this->assertSame('controller route', (string) $response->getBody());
-    }
-
     public function testInit()
     {
-        $this->assertInstanceOf('\\Buki\\Router', new Router());
+        $this->assertInstanceOf('\Buki\Router\Router', $this->router);
     }
 
-    public function testGetRoutes()
+    public function testRouteCount()
     {
-        $params = [
-            'paths' => [
-                'controllers' => 'controllers/',
-            ],
-            'namespaces' => [
-                'controllers' => 'Controllers\\',
-            ],
-            'base_folder' => __DIR__,
-            'main_method' => 'main',
-        ];
-        $router = new Router($params);
+        $this->router->get('/', 'HomeController@main');
+        $this->router->get('/contact', 'HomeController@contact');
+        $this->router->get('/about', 'HomeController@about');
 
-        $router->get('/', function() {
-            return 'Hello World!';
-        });
-
-        $router->get('/controllers', 'TestController@main');
-
-        $routes = $router->getRoutes();
-
-        $this->assertCount(2, $routes);
-        $this->assertInstanceOf('\\Closure', $routes[0]['callback']);
-        $this->assertSame('TestController@main', $routes[1]['callback']);
-        $this->assertSame('GET', $routes[0]['method']);
-        $this->assertSame('GET', $routes[1]['method']);
+        $this->assertCount(3, $this->router->getRoutes(), "doesn't contains 2 routes");
     }
 }

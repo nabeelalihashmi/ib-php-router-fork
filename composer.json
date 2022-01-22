@@ -35,6 +35,11 @@
       "Buki\\Tests\\": "tests/"
     }
   },
+  "scripts": {
+    "test": "vendor/bin/phpunit",
+    "coverage": "vendor/bin/phpunit --coverage-html coverage",
+    "dev": "cd tests/Example && php -S 127.0.0.1:8000 -t ./"
+  },
   "minimum-stability": "dev",
   "prefer-stable": true
 }
