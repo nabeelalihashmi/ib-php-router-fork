@@ -314,11 +314,13 @@ class Router
             }
 
             if ($foundRoute === false) {
+                $this->response()->setStatusCode(Response::HTTP_NOT_FOUND);
                 $this->routerCommand()->sendResponse(
                     call_user_func($this->notFoundCallback, $this->request(), $this->response())
                 );
             }
         } catch (Exception $e) {
+            $this->response()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
             if ($this->debug) {
                 die("Fatal error: Uncaught {$e}");
             }
@@ -630,6 +632,11 @@ class Router
 
         if (isset($params['base_folder'])) {
             $this->baseFolder = rtrim($params['base_folder'], '/');
+        }
+
+        $basePath = str_replace($this->request()->server->get('DOCUMENT_ROOT'), '', $this->baseFolder);
+        if (($baseFolder = $this->clearRouteName($basePath)) !== '/') {
+            $this->baseFolder = $baseFolder;
         }
 
         if (isset($params['main_method'])) {
