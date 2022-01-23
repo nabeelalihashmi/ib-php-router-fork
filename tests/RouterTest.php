@@ -79,20 +79,6 @@ class RouterTest extends TestCase
         $this->router->run();
         $this->assertEquals('get', ob_get_contents());
 
-        // Test POST
-        ob_clean();
-        $this->request->server->set('REQUEST_URI', '/post');
-        $this->request->server->set('REQUEST_METHOD', 'POST');
-        $this->router->run();
-        $this->assertEquals('post', ob_get_contents());
-
-        // Test PUT
-        ob_clean();
-        $this->request->server->set('REQUEST_URI', '/put');
-        $this->request->server->set('REQUEST_METHOD', 'PUT');
-        $this->router->run();
-        $this->assertEquals('put', ob_get_contents());
-
         // Cleanup
         ob_end_clean();
     }
