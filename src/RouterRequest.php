@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 class RouterRequest
 {
     /** @var string $validMethods Valid methods for Router */
-    protected $validMethods = 'GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|ANY|AJAX|XPOST|XPUT|XDELETE|XPATCH';
+    protected $validMethods = 'GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|ANY|AJAX|XGET|XPOST|XPUT|XDELETE|XPATCH';
 
     /** @var Request $request */
     private $request;
@@ -87,10 +87,10 @@ class RouterRequest
         $method = $this->request->getMethod();
         $formMethod = $this->request->request->get('_method');
         if (!empty($formMethod)) {
-            $method = strtoupper($formMethod);
+            $method = $formMethod;
         }
 
-        return $method;
+        return strtoupper($method);
     }
 
     /**

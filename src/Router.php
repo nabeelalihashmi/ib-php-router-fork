@@ -28,6 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
  * @method $this head(string $route, string|array|Closure $callback, array $options = [])
  * @method $this options(string $route, string|array|Closure $callback, array $options = [])
  * @method $this ajax(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this xget(string $route, string|array|Closure $callback, array $options = [])
  * @method $this xpost(string $route, string|array|Closure $callback, array $options = [])
  * @method $this xput(string $route, string|array|Closure $callback, array $options = [])
  * @method $this xdelete(string $route, string|array|Closure $callback, array $options = [])
