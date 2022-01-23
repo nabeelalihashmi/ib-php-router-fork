@@ -7,23 +7,19 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RouterRequest
 {
-    /**
-     * @var string $validMethods Valid methods for Router
-     */
+    /** @var string $validMethods Valid methods for Router */
     protected $validMethods = 'GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|ANY|AJAX|XPOST|XPUT|XDELETE|XPATCH';
-    /**
-     * @var Request $request
-     */
+
+    /** @var Request $request */
     private $request;
-    /**
-     * @var Response $response
-     */
+
+    /** @var Response $response */
     private $response;
 
     /**
      * RouterRequest constructor.
      *
-     * @param Request  $request
+     * @param Request $request
      * @param Response $response
      */
     public function __construct(Request $request, Response $response)

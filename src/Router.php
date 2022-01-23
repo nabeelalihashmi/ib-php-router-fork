@@ -19,47 +19,38 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Class Router
  *
- * @method $this any($route, $callback, array $options = [])
- * @method $this get($route, $callback, array $options = [])
- * @method $this post($route, $callback, array $options = [])
- * @method $this put($route, $callback, array $options = [])
- * @method $this delete($route, $callback, array $options = [])
- * @method $this patch($route, $callback, array $options = [])
- * @method $this head($route, $callback, array $options = [])
- * @method $this options($route, $callback, array $options = [])
- * @method $this ajax($route, $callback, array $options = [])
- * @method $this xpost($route, $callback, array $options = [])
- * @method $this xput($route, $callback, array $options = [])
- * @method $this xdelete($route, $callback, array $options = [])
- * @method $this xpatch($route, $callback, array $options = [])
+ * @method $this any(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this get(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this post(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this put(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this delete(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this patch(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this head(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this options(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this ajax(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this xpost(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this xput(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this xdelete(string $route, string|array|Closure $callback, array $options = [])
+ * @method $this xpatch(string $route, string|array|Closure $callback, array $options = [])
  *
- * @package Buki
+ * @package Buki\Router
+ * @see https://github.com/izniburak/php-router/wiki
  */
 class Router
 {
-    /**
-     * Router Version
-     */
-    const VERSION = '2.4.1';
+    /** Router Version */
+    const VERSION = '2.5.0';
 
-    /**
-     * @var string $baseFolder Pattern definitions for parameters of Route
-     */
+    /** @var string $baseFolder Base folder of the project */
     protected $baseFolder;
 
-    /**
-     * @var array $routes Routes list
-     */
+    /** @var array $routes Routes list */
     protected $routes = [];
 
-    /**
-     * @var array $groups List of group routes
-     */
+    /** @var array $groups List of group routes */
     protected $groups = [];
 
-    /**
-     * @var array $patterns Pattern definitions for parameters of Route
-     */
+    /** @var array $patterns Pattern definitions for parameters of Route */
     protected $patterns = [
         ':all' => '(.*)',
         ':any' => '([^/]+)',
@@ -74,61 +65,47 @@ class Router
         ':date' => '([0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]))',
     ];
 
-    /**
-     * @var array $namespaces Namespaces of Controllers and Middlewares files
-     */
+    /** @var array $namespaces Namespaces of Controllers and Middlewares files */
     protected $namespaces = [
         'middlewares' => '',
         'controllers' => '',
     ];
 
-    /**
-     * @var array $path Paths of Controllers and Middlewares files
-     */
+    /** @var array $path Paths of Controllers and Middlewares files */
     protected $paths = [
         'controllers' => 'Controllers',
         'middlewares' => 'Middlewares',
     ];
 
-    /**
-     * @var string $mainMethod Main method for controller
-     */
+    /** @var string $mainMethod Main method for controller */
     protected $mainMethod = 'main';
 
-    /**
-     * @var string $cacheFile Cache file
-     */
+    /** @var string $cacheFile Cache file */
     protected $cacheFile = '';
 
-    /**
-     * @var bool $cacheLoaded Cache is loaded?
-     */
+    /** @var bool $cacheLoaded Cache is loaded? */
     protected $cacheLoaded = false;
 
-    /**
-     * @var Closure $errorCallback Route error callback function
-     */
+    /** @var Closure $errorCallback Route error callback function */
     protected $errorCallback;
 
-    /**
-     * @var array $middlewares General middlewares for per request
-     */
+    /** @var Closure $notFoundCallback Route exception callback function */
+    protected $notFoundCallback;
+
+    /** @var array $middlewares General middlewares for per request */
     protected $middlewares = [];
 
-    /**
-     * @var array $routeMiddlewares Route middlewares
-     */
+    /** @var array $routeMiddlewares Route middlewares */
     protected $routeMiddlewares = [];
 
-    /**
-     * @var array $middlewareGroups Middleware Groups
-     */
+    /** @var array $middlewareGroups Middleware Groups */
     protected $middlewareGroups = [];
 
-    /**
-     * @var RouterRequest
-     */
+    /** @var RouterRequest */
     private $request;
+
+    /** @var bool */
+    private $debug = false;
 
     /**
      * Router constructor method.
@@ -142,13 +119,25 @@ class Router
         $this->baseFolder = realpath(getcwd());
 
         if (isset($params['debug']) && is_bool($params['debug'])) {
-            RouterException::$debug = $params['debug'];
+            $this->debug = $params['debug'];
         }
 
         // RouterRequest
         $request = $request ?? Request::createFromGlobals();
         $response = $response ?? new Response('', Response::HTTP_OK, ['content-type' => 'text/html']);
         $this->request = new RouterRequest($request, $response);
+
+        $this->notFoundCallback = function (Request $request, Response $response) {
+            $response->setStatusCode(Response::HTTP_NOT_FOUND);
+            $response->setContent('Looks like page not found or something went wrong. Please try again.');
+            return $response;
+        };
+
+        $this->errorCallback = function (Request $request, Response $response) {
+            $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+            $response->setContent('Oops! Something went wrong. Please try again.');
+            return $response;
+        };
 
         $this->setPaths($params);
         $this->loadCache();
@@ -175,7 +164,7 @@ class Router
         }
 
         if (!in_array(strtoupper($method), explode('|', $this->request->validMethods()))) {
-            return $this->exception("Method is not valid. [{$method}]");
+            $this->exception("Method is not valid. [{$method}]");
         }
 
         [$route, $callback] = $params;
@@ -213,15 +202,15 @@ class Router
      *
      * @param string $methods
      * @param string $route
-     * @param string|closure $callback
+     * @param string|array|closure $callback
      * @param array $options
      *
-     * @return bool
+     * @return void
      */
-    public function add(string $methods, string $route, $callback, array $options = [])
+    public function add(string $methods, string $route, $callback, array $options = []): void
     {
         if ($this->cacheLoaded) {
-            return true;
+            return;
         }
 
         if (strstr($methods, '|')) {
@@ -233,8 +222,6 @@ class Router
         } else {
             $this->addRoute($route, $methods, $callback, $options);
         }
-
-        return true;
     }
 
     /**
@@ -251,13 +238,13 @@ class Router
         if (is_array($pattern)) {
             foreach ($pattern as $key => $value) {
                 if (in_array($key, array_keys($this->patterns))) {
-                    return $this->exception($key . ' pattern cannot be changed.');
+                    $this->exception($key . ' pattern cannot be changed.');
                 }
                 $this->patterns[$key] = '(' . $value . ')';
             }
         } else {
             if (in_array($pattern, array_keys($this->patterns))) {
-                return $this->exception($pattern . ' pattern cannot be changed.');
+                $this->exception($pattern . ' pattern cannot be changed.');
             }
             $this->patterns[$pattern] = '(' . $attr . ')';
         }
@@ -273,67 +260,69 @@ class Router
      */
     public function run(): void
     {
-        $uri = $this->getRequestUri();
-        $method = $this->request->getMethod();
-        $searches = array_keys($this->patterns);
-        $replaces = array_values($this->patterns);
-        $foundRoute = false;
+        try {
+            $uri = $this->getRequestUri();
+            $method = $this->request->getMethod();
+            $searches = array_keys($this->patterns);
+            $replaces = array_values($this->patterns);
+            $foundRoute = false;
 
-        foreach ($this->routes as $data) {
-            $route = $data['route'];
-            if (!$this->request->validMethod($data['method'], $method)) {
-                continue;
-            }
+            foreach ($this->routes as $data) {
+                $route = $data['route'];
+                if (!$this->request->validMethod($data['method'], $method)) {
+                    continue;
+                }
 
-            // Direct Route Match
-            if ($route === $uri) {
-                $foundRoute = true;
-                $this->runRouteMiddleware($data, 'before');
-                $this->runRouteCommand($data['callback']);
-                $this->runRouteMiddleware($data, 'after');
-                break;
-
-                // Parameter Route Match
-            } elseif (strstr($route, ':') !== false) {
-                $route = str_replace($searches, $replaces, $route);
-                if (preg_match('#^' . $route . '$#', $uri, $matched)) {
+                // Direct Route Match
+                if ($route === $uri) {
                     $foundRoute = true;
-
                     $this->runRouteMiddleware($data, 'before');
-
-                    array_shift($matched);
-                    $matched = array_map(function ($value) {
-                        return trim(urldecode($value));
-                    }, $matched);
-
-                    foreach ($data['groups'] as $group) {
-                        if (strstr($group, ':') !== false) {
-                            array_shift($matched);
-                        }
-                    }
-
-                    $this->runRouteCommand($data['callback'], $matched);
+                    $this->runRouteCommand($data['callback']);
                     $this->runRouteMiddleware($data, 'after');
                     break;
+
+                    // Parameter Route Match
+                } elseif (strstr($route, ':') !== false) {
+                    $route = str_replace($searches, $replaces, $route);
+                    if (preg_match('#^' . $route . '$#', $uri, $matched)) {
+                        $foundRoute = true;
+
+                        $this->runRouteMiddleware($data, 'before');
+
+                        array_shift($matched);
+                        $matched = array_map(function ($value) {
+                            return trim(urldecode($value));
+                        }, $matched);
+
+                        foreach ($data['groups'] as $group) {
+                            if (strstr($group, ':') !== false) {
+                                array_shift($matched);
+                            }
+                        }
+
+                        $this->runRouteCommand($data['callback'], $matched);
+                        $this->runRouteMiddleware($data, 'after');
+                        break;
+                    }
                 }
             }
-        }
 
-        // If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
-        if ($this->request()->isMethod('HEAD')) {
-            ob_end_clean();
-        }
+            // If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
+            if ($this->request()->isMethod('HEAD')) {
+                ob_end_clean();
+            }
 
-        if ($foundRoute === false) {
-            if (!$this->errorCallback) {
-                $this->errorCallback = function (Request $request, Response $response) {
-                    $response->setStatusCode(Response::HTTP_NOT_FOUND);
-                    $response->setContent('Looks like page not found or something went wrong. Please try again.');
-                    return $response;
-                };
+            if ($foundRoute === false) {
+                $this->routerCommand()->sendResponse(
+                    call_user_func($this->notFoundCallback, $this->request(), $this->response())
+                );
+            }
+        } catch (Exception $e) {
+            if ($this->debug) {
+                die("Fatal error: Uncaught {$e}");
             }
             $this->routerCommand()->sendResponse(
-                call_user_func($this->errorCallback, $this->request(), $this->response())
+                call_user_func($this->errorCallback, $this->request(), $this->response(), $e)
             );
         }
     }
@@ -374,13 +363,13 @@ class Router
      * @param string $controller
      * @param array $options
      *
-     * @return mixed
+     * @return void
      * @throws
      */
-    public function controller(string $route, string $controller, array $options = [])
+    public function controller(string $route, string $controller, array $options = []): void
     {
         if ($this->cacheLoaded) {
-            return true;
+            return;
         }
 
         $only = $options['only'] ?? [];
@@ -429,12 +418,22 @@ class Router
             }
             unset($ref);
         }
-
-        return true;
     }
 
     /**
-     * Routes error function.
+     * Routes Not Found Error function.
+     *
+     * @param Closure $callback
+     *
+     * @return void
+     */
+    public function notFound(Closure $callback): void
+    {
+        $this->notFoundCallback = $callback;
+    }
+
+    /**
+     * Routes exception errors function.
      *
      * @param Closure $callback
      *
@@ -477,13 +476,13 @@ class Router
     {
         foreach ($this->getRoutes() as $key => $route) {
             if (!is_string($route['callback'])) {
-                throw new Exception(sprintf('Routes cannot contain a Closure/Function callback while caching.'));
+                $this->exception('Routes cannot contain a Closure/Function callback while caching.');
             }
         }
 
         $cacheContent = '<?php return ' . var_export($this->getRoutes(), true) . ';' . PHP_EOL;
         if (false === file_put_contents($this->cacheFile, $cacheContent)) {
-            throw new Exception(sprintf('Routes cache file could not be written.'));
+            $this->exception('Routes cache file could not be written.');
         }
 
         return true;
@@ -574,12 +573,11 @@ class Router
      * @param string $message
      * @param int $statusCode
      *
-     * @return RouterException
      * @throws Exception
      */
-    protected function exception(string $message = '', int $statusCode = 500): RouterException
+    protected function exception(string $message = '', int $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR)
     {
-        return new RouterException($message, $statusCode);
+        throw new RouterException($message, $statusCode);
     }
 
     /**
@@ -644,6 +642,7 @@ class Router
      * @param string $controller
      *
      * @return RouterException|string
+     * @throws Exception
      */
     protected function resolveClassName(string $controller)
     {
@@ -660,7 +659,7 @@ class Router
 
         $file = realpath("{$this->paths['controllers']}/{$controller}.php");
         if (!file_exists($file)) {
-            return $this->exception("{$controller} class is not found! Please check the file.");
+            $this->exception("{$controller} class is not found! Please check the file.");
         }
 
         $controller = $this->namespaces['controllers'] . str_replace('/', '\\', $controller);
@@ -692,7 +691,7 @@ class Router
      *
      * @param string $uri
      * @param string $method
-     * @param        $callback
+     * @param string|array|Closure $callback
      * @param array|null $options
      *
      * @return void
@@ -755,7 +754,7 @@ class Router
      *
      * @return void
      */
-    protected function runRouteCommand($command, array $params = [])
+    protected function runRouteCommand($command, array $params = []): void
     {
         $this->routerCommand()->runRoute($command, $params);
     }
@@ -792,7 +791,7 @@ class Router
         $basename = basename($script);
 
         $uri = str_replace([$dirname, $basename], '', $this->request()->server->get('REQUEST_URI'));
-        $uri = preg_replace('/'.str_replace(['\\', '/', '.',], ['/', '\/', '\.'], $this->baseFolder).'/', '', $uri, 1);
+        $uri = preg_replace('/' . str_replace(['\\', '/', '.',], ['/', '\/', '\.'], $this->baseFolder) . '/', '', $uri, 1);
 
         return $this->clearRouteName(explode('?', $uri)[0]);
     }

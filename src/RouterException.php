@@ -4,28 +4,19 @@ namespace Buki\Router;
 
 use Exception;
 
-class RouterException
+class RouterException extends Exception
 {
-    /**
-     * @var bool $debug Debug mode
-     */
-    public static $debug = false;
-
     /**
      * Create Exception Class.
      *
      * @param string $message
      *
-     * @param int    $statusCode
+     * @param int $statusCode
      *
      * @throws Exception
      */
     public function __construct(string $message, int $statusCode = 500)
     {
-        http_response_code($statusCode);
-        if (self::$debug) {
-            throw new Exception($message, $statusCode);
-        }
-        die($message);
+        parent::__construct($message, $statusCode);
     }
 }

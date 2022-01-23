@@ -50,4 +50,50 @@ class RouterTest extends TestCase
 
         $this->assertCount(3, $this->router->getRoutes(), "doesn't contains 2 routes");
     }
+
+    public function testRequestMethods()
+    {
+        $this->router->get('/get', function () {
+            return 'get';
+        });
+        $this->router->post('/post', function () {
+            return 'post';
+        });
+        $this->router->put('/put', function () {
+            return 'put';
+        });
+        $this->router->patch('/', function () {
+            return 'patch';
+        });
+        $this->router->delete('/', function () {
+            return 'delete';
+        });
+        $this->router->options('/', function () {
+            return 'options';
+        });
+
+        // Test GET
+        ob_start();
+        $this->request->server->set('REQUEST_URI', '/get');
+        $this->request->server->set('REQUEST_METHOD', 'GET');
+        $this->router->run();
+        $this->assertEquals('get', ob_get_contents());
+
+        // Test POST
+        ob_clean();
+        $this->request->server->set('REQUEST_URI', '/post');
+        $this->request->server->set('REQUEST_METHOD', 'POST');
+        $this->router->run();
+        $this->assertEquals('post', ob_get_contents());
+
+        // Test PUT
+        ob_clean();
+        $this->request->server->set('REQUEST_URI', '/put');
+        $this->request->server->set('REQUEST_METHOD', 'PUT');
+        $this->router->run();
+        $this->assertEquals('put', ob_get_contents());
+
+        // Cleanup
+        ob_end_clean();
+    }
 }

@@ -3,6 +3,7 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 $params = [
+    'debug' => true,
     'paths' => [
         'controllers' => __DIR__ . '/Controllers',
         'middlewares' => __DIR__ . '/Middlewares',
@@ -19,9 +20,11 @@ $router = new \Buki\Router\Router($params);
 
 $router->get('/', function() {
     return 'Hello World!';
-});
+}, ['before' => 'TestMiddleware:burak,30']);
 
 $router->get('/test', 'TestController@main');
+$router->get('/test2', ['TestController', 'main']);
+$router->get('/invoke', 'FooController');
 
 $router->controller('/controller', 'TestController');
 
