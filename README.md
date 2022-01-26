@@ -10,6 +10,7 @@
 ```
 simple Router class for PHP. with the support of Controllers and Middlewares.
 
+![Tests](https://github.com/izniburak/php-router/actions/workflows/run-tests.yml/badge.svg)
 [![Total Downloads](https://poser.pugx.org/izniburak/router/d/total.svg)](https://packagist.org/packages/izniburak/router)
 [![Latest Stable Version](https://poser.pugx.org/izniburak/router/v/stable.svg)](https://packagist.org/packages/izniburak/router)
 [![Latest Unstable Version](https://poser.pugx.org/izniburak/router/v/unstable.svg)](https://packagist.org/packages/izniburak/router)
@@ -26,7 +27,7 @@ simple Router class for PHP. with the support of Controllers and Middlewares.
 - Adding a new pattern supports. (with RegExp)
 - Namespaces supports.
 - Group Routing
-- Custom 404 handling
+- Custom 404 and Exception handling
 - Debug mode (Error message open/close)
 
 ## Install
