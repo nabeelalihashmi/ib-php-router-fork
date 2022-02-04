@@ -40,7 +40,7 @@ use Symfony\Component\HttpFoundation\Response;
 class Router
 {
     /** Router Version */
-    const VERSION = '2.5.0';
+    const VERSION = '2.5.2';
 
     /** @var string $baseFolder Base folder of the project */
     protected $baseFolder;
@@ -320,10 +320,11 @@ class Router
                 );
             }
         } catch (Exception $e) {
-            $this->response()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
             if ($this->debug) {
+                http_response_code(Response::HTTP_INTERNAL_SERVER_ERROR);
                 die("Fatal error: Uncaught {$e}");
             }
+            $this->response()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
             $this->routerCommand()->sendResponse(
                 call_user_func($this->errorCallback, $this->request(), $this->response(), $e)
             );
