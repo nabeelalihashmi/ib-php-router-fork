@@ -8,7 +8,7 @@
  |_|    |_|  |_|_|               |_|  \_\___/ \__,_|\__\___|_|   
 
 ```
-simple Router class for PHP. with the support of Controllers and Middlewares.
+**PHP Router**, which also has rich features like Middlewares and Controllers is simple and useful router class for PHP.
 
 ![Tests](https://github.com/izniburak/php-router/actions/workflows/run-tests.yml/badge.svg)
 [![Total Downloads](https://poser.pugx.org/izniburak/router/d/total.svg)](https://packagist.org/packages/izniburak/router)
@@ -32,7 +32,13 @@ simple Router class for PHP. with the support of Controllers and Middlewares.
 
 ## Install
 
-composer.json file:
+To install **PHP Router**, You can run the following command directly at your project path in your console:
+
+```
+$ composer require izniburak/router
+```
+
+OR you can add following lines into the `composer.json` file manually:
 ```json
 {
     "require": {
@@ -40,15 +46,9 @@ composer.json file:
     }
 }
 ```
-after run the install command.
+Then, run the following command:
 ```
 $ composer install
-```
-
-OR run the following command directly.
-
-```
-$ composer require izniburak/router
 ```
 
 ## Example Usage
