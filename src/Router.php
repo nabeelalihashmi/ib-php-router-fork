@@ -321,8 +321,7 @@ class Router
             }
         } catch (Exception $e) {
             if ($this->debug) {
-                http_response_code(Response::HTTP_INTERNAL_SERVER_ERROR);
-                die("Fatal error: Uncaught {$e}");
+                throw $e;
             }
             $this->response()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
             $this->routerCommand()->sendResponse(
